@@ -2,7 +2,9 @@ package it.lorenzoval.isw2_ml_for_se_deliverable;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,7 +14,7 @@ public class Main {
 
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
         ProcessBuilder pb;
         final String projectName = PROJECT_URL.substring(PROJECT_URL.lastIndexOf('/') + 1);
         File file = new File(projectName);
@@ -35,6 +37,11 @@ public class Main {
         pb.inheritIO();
         Process pr = pb.start();
         pr.waitFor();
+
+        List<Issue> bugs = JIRAHandler.getBugs(projectName);
+        for (Issue bug : bugs) {
+            logger.log(Level.INFO, bug.getKey());
+        }
     }
 
 }
