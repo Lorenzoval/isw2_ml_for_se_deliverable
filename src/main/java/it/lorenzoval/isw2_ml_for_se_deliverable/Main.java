@@ -10,35 +10,35 @@ import java.util.logging.Logger;
 
 public class Main {
 
-    public static final String PROJECT_URL = "https://github.com/apache/syncope";
-
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
+        Project syncope = new Syncope();
+        String syncopeProjectName = syncope.getProjectName();
+        String syncopeUrl = syncope.getUrl();
         ProcessBuilder pb;
-        final String projectName = PROJECT_URL.substring(PROJECT_URL.lastIndexOf('/') + 1);
-        File file = new File(projectName);
+        File file = new File(syncopeProjectName);
         String logMsg;
         if (file.exists()) {
             if (!file.isDirectory()) {
-                String errorMsg = MessageFormat.format("File {0} exists in process path and is not a directory", projectName);
+                String errorMsg = MessageFormat.format("File {0} exists in process path and is not a directory", syncopeProjectName);
                 logger.log(Level.SEVERE, errorMsg);
                 return;
             } else {
-                logMsg = MessageFormat.format("Updating {0} source code", projectName);
+                logMsg = MessageFormat.format("Updating {0} source code", syncopeProjectName);
                 pb = new ProcessBuilder("git", "pull");
                 pb.directory(file);
             }
         } else {
-            logMsg = MessageFormat.format("Downloading {0} source code", projectName);
-            pb = new ProcessBuilder("git", "clone", PROJECT_URL);
+            logMsg = MessageFormat.format("Downloading {0} source code", syncopeProjectName);
+            pb = new ProcessBuilder("git", "clone", syncopeUrl);
         }
         logger.log(Level.INFO, logMsg);
         pb.inheritIO();
         Process pr = pb.start();
         pr.waitFor();
 
-        List<Issue> bugs = JIRAHandler.getBugs(projectName);
+        List<Issue> bugs = JIRAHandler.getBugs(syncope);
         for (Issue bug : bugs) {
             logger.log(Level.INFO, bug.getKey());
         }
