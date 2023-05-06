@@ -38,10 +38,14 @@ public class Main {
         Process pr = pb.start();
         pr.waitFor();
 
-        List<Issue> bugs = JIRAHandler.getBugs(syncope);
-        for (Issue bug : bugs) {
-            logger.log(Level.INFO, bug.getKey());
+        List<Release> releases = JIRAHandler.getReleases(syncope);
+        int i = 0;
+
+        for (Release release : releases) {
+            i++;
+            logger.log(Level.INFO, "{0} {1}", new Object[]{release.getName(), release.getReleaseDate()});
         }
+        logger.log(Level.INFO, "Total releases: {0}", i);
     }
 
 }
