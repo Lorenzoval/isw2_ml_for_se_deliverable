@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 public class GitHandler {
 
     private static final Logger logger = Logger.getLogger(GitHandler.class.getName());
+    private static final String GIT = "/usr/bin/git";
 
     private GitHandler() {
     }
@@ -27,12 +28,12 @@ public class GitHandler {
                 throw new IOException();
             } else {
                 logMsg = MessageFormat.format("Updating {0} source code", projectName);
-                pb = new ProcessBuilder("git", "fetch", "--all");
+                pb = new ProcessBuilder(GIT, "fetch", "--all");
                 pb.directory(file);
             }
         } else {
             logMsg = MessageFormat.format("Downloading {0} source code", projectName);
-            pb = new ProcessBuilder("git", "clone", url);
+            pb = new ProcessBuilder(GIT, "clone", url);
         }
         logger.log(Level.INFO, logMsg);
         pb.inheritIO();
@@ -44,7 +45,7 @@ public class GitHandler {
         String projectName = project.getProjectName();
         String tagName = MessageFormat.format(project.getReleaseString(), release.getName());
         File file = new File(projectName);
-        ProcessBuilder pb = new ProcessBuilder("git", "checkout", MessageFormat.format("tags/{0}",
+        ProcessBuilder pb = new ProcessBuilder(GIT, "checkout", MessageFormat.format("tags/{0}",
                 tagName));
         pb.directory(file);
         pb.inheritIO();

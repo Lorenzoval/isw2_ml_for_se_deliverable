@@ -19,7 +19,7 @@ public class TokeiHandler {
         String projectName = project.getProjectName();
         File directory = new File(projectName);
         Map<String, Integer> files = new HashMap<>();
-        ProcessBuilder pb = new ProcessBuilder("tokei", "-t", "java", "-o", "json");
+        ProcessBuilder pb = new ProcessBuilder("/usr/bin/tokei", "-t", "java", "-o", "json");
         pb.directory(directory);
         Process pr = pb.start();
         String output = IOUtils.toString(pr.getInputStream(), StandardCharsets.UTF_8);
