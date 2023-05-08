@@ -29,16 +29,17 @@ public class JIRAHandler {
     private JIRAHandler() {
     }
 
-    public static List<Issue> getBugs(Project project) throws URISyntaxException {
+    public static List<Issue> getBugs(Project project) throws URISyntaxException, IOException {
         int i = 0;
         int j;
-        int total = 1;
+        int total;
         String urlString;
         List<Issue> bugs = new ArrayList<>();
 
         do {
             j = i + 1000;
-            urlString = MessageFormat.format(BUGS_URL, project.getProjectName().toUpperCase(Locale.ROOT), Integer.toString(i), Integer.toString(j));
+            urlString = MessageFormat.format(BUGS_URL, project.getProjectName().toUpperCase(Locale.ROOT),
+                    Integer.toString(i), Integer.toString(j));
             URI uri = new URI(urlString).parseServerAuthority();
 
             try (InputStream in = uri.toURL().openStream()) {
@@ -49,9 +50,6 @@ public class JIRAHandler {
                 for (; i < total && i < j; i++) {
                     bugs.add(new Issue(issues.getJSONObject(i % 1000).get("key").toString()));
                 }
-
-            } catch (IOException ioe) {
-                logger.log(Level.WARNING, ioe.toString());
             }
 
         } while (i < total);
@@ -59,7 +57,7 @@ public class JIRAHandler {
         return bugs;
     }
 
-    public static List<Release> getReleases(Project project) throws URISyntaxException {
+    public static List<Release> getReleases(Project project) throws URISyntaxException, IOException {
         String urlString;
         List<Release> releases = new ArrayList<>();
         urlString = MessageFormat.format(RELEASES_URL, project.getProjectName().toUpperCase(Locale.ROOT));
@@ -85,9 +83,6 @@ public class JIRAHandler {
                     }
                 }
             }
-
-        } catch (IOException ioe) {
-            logger.log(Level.WARNING, ioe.toString());
         }
 
         return releases;

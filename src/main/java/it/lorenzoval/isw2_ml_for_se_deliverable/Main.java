@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ public class Main {
         StringBuilder line = new StringBuilder();
         lines.add("Version,File Name,LOC");
         List<Release> releases = JIRAHandler.getReleases(project);
+        Collections.sort(releases);
         for (Release release : releases) {
             GitHandler.changeRelease(project, release);
             Map<String, Integer> files = TokeiHandler.countLoc(project);
