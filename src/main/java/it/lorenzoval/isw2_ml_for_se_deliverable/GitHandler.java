@@ -40,7 +40,7 @@ public class GitHandler {
         pr.waitFor();
     }
 
-    public static void changeRelease(Project project, Release release) throws IOException, InterruptedException {
+    public static int changeRelease(Project project, Release release) throws IOException, InterruptedException {
         String projectName = project.getProjectName();
         String tagName = MessageFormat.format(project.getReleaseString(), release.getName());
         File file = new File(projectName);
@@ -50,6 +50,7 @@ public class GitHandler {
         pb.inheritIO();
         Process pr = pb.start();
         pr.waitFor();
+        return pr.exitValue();
     }
 
 }

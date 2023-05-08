@@ -72,16 +72,25 @@ public class Main {
         return retList;
     }
 
+    public static List<Release> dropLastFiftyPercent(List<Release> releases) {
+        List<Release> retList = new ArrayList<>();
+        for (int i = 0; i < releases.size() / 2; i++)
+            retList.add(releases.get(i));
+        return retList;
+    }
+
     public static void buildDataset(Project project) throws IOException, InterruptedException, URISyntaxException {
         File outFile = new File(project.getProjectName() + ".csv");
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
         lines.add("Version,File Name,LOC");
-        List<Release> releases = JIRAHandler.getReleases(project);
-        Collections.sort(releases);
-        releases = dropBackwardCompatibility(releases);
+        List<Release> allReleases = JIRAHandler.getReleases(project);
+        Collections.sort(allReleases);
+        List<Release> mainReleases = dropBackwardCompatibility(allReleases);
+        List<Release> releases = dropLastFiftyPercent(mainReleases);
         for (Release release : releases) {
-            GitHandler.changeRelease(project, release);
+            if (GitHandler.changeRelease(project, release) != 0)
+                continue;
             Map<String, Integer> files = TokeiHandler.countLoc(project);
             for (Map.Entry<String, Integer> entry : files.entrySet()) {
                 line.setLength(0);
