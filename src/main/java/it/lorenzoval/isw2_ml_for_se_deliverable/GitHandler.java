@@ -1,13 +1,8 @@
 package it.lorenzoval.isw2_ml_for_se_deliverable;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,7 +21,8 @@ public class GitHandler {
         String logMsg;
         if (file.exists()) {
             if (!file.isDirectory()) {
-                String errorMsg = MessageFormat.format("File {0} exists in process path and is not a directory", projectName);
+                String errorMsg = MessageFormat.format("File {0} exists in process path and is not a directory",
+                        projectName);
                 logger.log(Level.SEVERE, errorMsg);
                 throw new IOException();
             } else {
@@ -48,23 +44,12 @@ public class GitHandler {
         String projectName = project.getProjectName();
         String tagName = MessageFormat.format(project.getReleaseString(), release.getName());
         File file = new File(projectName);
-        ProcessBuilder pb = new ProcessBuilder("git", "checkout",
-                MessageFormat.format("tags/{0}", tagName));
+        ProcessBuilder pb = new ProcessBuilder("git", "checkout", MessageFormat.format("tags/{0}",
+                tagName));
         pb.directory(file);
         pb.inheritIO();
         Process pr = pb.start();
         pr.waitFor();
-    }
-
-    public static List<String> getFiles(Project project) throws IOException, InterruptedException {
-        String projectName = project.getProjectName();
-        File file = new File(projectName);
-        ProcessBuilder pb = new ProcessBuilder("git", "ls-files", "*.java");
-        pb.directory(file);
-        Process pr = pb.start();
-        String files = IOUtils.toString(pr.getInputStream(), StandardCharsets.UTF_8);
-        pr.waitFor();
-        return Arrays.asList(files.split("\n"));
     }
 
 }

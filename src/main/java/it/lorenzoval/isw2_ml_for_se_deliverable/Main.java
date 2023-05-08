@@ -7,8 +7,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map;
 
 public class Main {
 
@@ -16,14 +15,14 @@ public class Main {
         File outFile = new File(project.getProjectName() + ".csv");
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
-        lines.add("Version,File Name");
+        lines.add("Version,File Name,LOC");
         List<Release> releases = JIRAHandler.getReleases(project);
         for (Release release : releases) {
             GitHandler.changeRelease(project, release);
-            List<String> files = GitHandler.getFiles(project);
-            for (String file : files) {
+            Map<String, Integer> files = TokeiHandler.countLoc(project);
+            for (Map.Entry<String, Integer> entry : files.entrySet()) {
                 line.setLength(0);
-                line.append(release.getName()).append(",").append(file);
+                line.append(release.getName()).append(",").append(entry.getKey()).append(",").append(entry.getValue());
                 lines.add(line.toString());
             }
         }
