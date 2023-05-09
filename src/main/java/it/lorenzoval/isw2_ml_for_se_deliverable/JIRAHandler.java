@@ -57,7 +57,8 @@ public class JIRAHandler {
         return bugs;
     }
 
-    public static List<Release> getReleases(Project project) throws URISyntaxException, IOException {
+    public static List<Release> getReleases(Project project) throws URISyntaxException, IOException,
+            InterruptedException {
         String urlString;
         List<Release> releases = new ArrayList<>();
         urlString = MessageFormat.format(RELEASES_URL, project.getProjectName().toUpperCase(Locale.ROOT));
@@ -73,7 +74,11 @@ public class JIRAHandler {
                 JSONObject jsonObject = versions.getJSONObject(i);
                 if (jsonObject.has(rd)) {
                     if (jsonObject.has(n)) {
-                        releases.add(new Release(jsonObject.getString(n), LocalDate.parse(jsonObject.getString(rd))));
+                        String releaseName = jsonObject.getString(n);
+                        LocalDate releaseDate = GitHandler.getReleaseDate(project, releaseName);
+                        // Only add if present in git as well
+                        if (releaseDate != null)
+                            releases.add(new Release(releaseName, releaseDate));
                     } else {
                         logger.log(Level.SEVERE, "No name found for release {0}", jsonObject.getString(rd));
                     }
