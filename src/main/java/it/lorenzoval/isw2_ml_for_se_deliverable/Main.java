@@ -133,7 +133,9 @@ public class Main {
         GitHandler.cloneOrPull(syncope);
         GitHandler.cloneOrPull(bookkeeper);
         buildDataset(syncope);
+        syncope.getRenamedFiles().clear();
         buildDataset(bookkeeper);
+        bookkeeper.getRenamedFiles().clear();
     }
 
 }

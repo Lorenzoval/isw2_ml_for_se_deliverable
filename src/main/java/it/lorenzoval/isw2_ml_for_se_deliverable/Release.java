@@ -7,11 +7,13 @@ import java.util.Objects;
 
 public class Release implements Comparable<Release> {
 
+    private final Project project;
     private final String name;
     private final LocalDate releaseDate;
     private final Map<String, Metrics> files;
 
-    public Release(String name, LocalDate releaseDate) {
+    public Release(Project project, String name, LocalDate releaseDate) {
+        this.project = project;
         this.name = name;
         this.releaseDate = releaseDate;
         this.files = new HashMap<>();
@@ -34,7 +36,18 @@ public class Release implements Comparable<Release> {
     }
 
     public void updateMetrics(String fileName, String author, int chgSetSize, int locAdded, int locDeleted) {
-        files.computeIfPresent(fileName, (k, v) -> v.updateFromCommit(author, chgSetSize, locAdded, locDeleted));
+        if (!files.containsKey(fileName)) {
+            RenamedFiles renamedFiles = this.project.getRenamedFiles();
+            if (renamedFiles.isRenamed(fileName)) {
+                for (String alias : renamedFiles.getNames(fileName)) {
+                    if (files.containsKey(alias)) {
+                        files.get(alias).updateFromCommit(author, chgSetSize, locAdded, locDeleted);
+                    }
+                }
+            }
+        } else {
+            files.get(fileName).updateFromCommit(author, chgSetSize, locAdded, locDeleted);
+        }
     }
 
     @Override

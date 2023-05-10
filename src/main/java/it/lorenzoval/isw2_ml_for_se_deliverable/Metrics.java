@@ -8,6 +8,7 @@ public class Metrics {
 
     private final long loc;
     private final HashSet<String> authors;
+    private final long age;
     private int locTouched;
     private int numRevs;
     private int locAdded;
@@ -19,7 +20,6 @@ public class Metrics {
     private int chgSetSize;
     private int maxChgSetSize;
     private double avgChgSetSize;
-    private final long age;
 
     public Metrics(long loc, LocalDate creationDate, LocalDate releaseDate) {
         this.loc = loc;
@@ -98,7 +98,7 @@ public class Metrics {
         return this.age * this.locTouched;
     }
 
-    public Metrics updateFromCommit(String author, int chgSetSize, int locAdded, int locDeleted) {
+    public void updateFromCommit(String author, int chgSetSize, int locAdded, int locDeleted) {
         this.locTouched += locAdded + locDeleted;
         this.numRevs++;
         this.authors.add(author);
@@ -112,7 +112,6 @@ public class Metrics {
         this.chgSetSize += chgSetSize;
         this.maxChgSetSize = Math.max(this.maxChgSetSize, chgSetSize);
         this.avgChgSetSize += (chgSetSize - this.avgChgSetSize) / numRevs;
-        return this;
     }
 
 }
