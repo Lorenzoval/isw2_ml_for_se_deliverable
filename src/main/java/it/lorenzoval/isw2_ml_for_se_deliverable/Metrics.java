@@ -11,6 +11,7 @@ public class Metrics {
     private final long age;
     private int locTouched;
     private int numRevs;
+    private int numFixes;
     private int locAdded;
     private int maxLocAdded;
     private double avgLocAdded;
@@ -25,6 +26,7 @@ public class Metrics {
         this.loc = loc;
         this.locTouched = 0;
         this.numRevs = 0;
+        this.numFixes = 0;
         this.authors = new HashSet<>();
         this.locAdded = 0;
         this.maxLocAdded = 0;
@@ -48,6 +50,10 @@ public class Metrics {
 
     public int getNumRevs() {
         return this.numRevs;
+    }
+
+    public int getNumFixes() {
+        return this.numFixes;
     }
 
     public int getNumAuthors() {
@@ -96,6 +102,10 @@ public class Metrics {
 
     public long getWeightedAge() {
         return this.age * this.locTouched;
+    }
+
+    public void increaseFixes() {
+        this.numFixes++;
     }
 
     public void updateFromCommit(String author, int chgSetSize, int locAdded, int locDeleted) {
