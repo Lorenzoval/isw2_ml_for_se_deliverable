@@ -27,7 +27,7 @@ public class Main {
             for (Map.Entry<String, Metrics> entry : fileMetrics.entrySet()) {
                 Metrics metrics = entry.getValue();
                 line.setLength(0);
-                line.append(release.getName()).append(",").append(entry.getKey()).append(",").append(metrics.getLoc())
+                line.append(release.getId()).append(",").append(entry.getKey()).append(",").append(metrics.getLoc())
                         .append(",").append(metrics.getNumFixes()).append(",").append(metrics.getNumAuthors())
                         .append(",").append(metrics.getLocAdded()).append(",").append(metrics.getMaxLocAdded())
                         .append(",").append(metrics.getAvgLocAdded()).append(",").append(metrics.getChurn())
