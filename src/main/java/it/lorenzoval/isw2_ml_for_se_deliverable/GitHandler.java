@@ -19,6 +19,8 @@ public class GitHandler {
     private static final String GIT = "/usr/bin/git";
     private static final String NP = "--no-pager";
     private static final String DATE_FORMAT = "--format=%cs";
+    private static final String COMMIT_FORMAT = "--pretty=format:$%h$%an$%s";
+    private static final String NUMSTAT = "--numstat";
 
     private GitHandler() {
     }
@@ -144,7 +146,7 @@ public class GitHandler {
     }
 
     public static void parseNumstat(Project project, String line, String author, int chgSetSize, Release release,
-                                    List<String> files) {
+                                    List<String> files, boolean dropped) {
         int locAdded;
         int locDeleted;
         String[] temp = line.split("\t");
@@ -162,7 +164,8 @@ public class GitHandler {
             locAdded = Integer.parseInt(temp[0]);
             locDeleted = Integer.parseInt(temp[1]);
             files.add(fileName);
-            release.updateMetrics(fileName, author, chgSetSize, locAdded, locDeleted);
+            if (!dropped)
+                release.updateMetrics(fileName, author, chgSetSize, locAdded, locDeleted);
         }
     }
 
@@ -172,7 +175,7 @@ public class GitHandler {
             release.addCommit(commit);
     }
 
-    public static void parseLines(Project project, String output, Release release) {
+    public static void parseLines(Project project, String output, Release release, boolean dropped) {
         String[] lines = output.split("\n");
         String hash = null;
         String author = null;
@@ -195,7 +198,7 @@ public class GitHandler {
                     author = values[1];
                     subject = values[2];
                 } else {
-                    parseNumstat(project, str, author, chgSetSize, release, files);
+                    parseNumstat(project, str, author, chgSetSize, release, files, dropped);
                 }
             }
         }
@@ -216,10 +219,10 @@ public class GitHandler {
             String output = IOUtils.toString(pr.getInputStream(), StandardCharsets.UTF_8);
             pr.waitFor();
             String firstCommit = output.substring("commit ".length(), output.indexOf("\n"));
-            pb.command(GIT, NP, "log", "--boundary", "--numstat", "--pretty=format:$%h$%an$%s",
+            pb.command(GIT, NP, "log", "--boundary", NUMSTAT, COMMIT_FORMAT,
                     firstCommit + ".." + MessageFormat.format(project.getReleaseString(), releases[0].getName()));
         } else if (releases.length == 2) {
-            pb.command(GIT, NP, "log", "--numstat", "--pretty=format:$%h$%an$%s",
+            pb.command(GIT, NP, "log", NUMSTAT, COMMIT_FORMAT,
                     MessageFormat.format(project.getReleaseString(), releases[0].getName()) + ".." +
                             MessageFormat.format(project.getReleaseString(), releases[1].getName()));
         }
@@ -227,10 +230,25 @@ public class GitHandler {
         String output = IOUtils.toString(pr.getInputStream(), StandardCharsets.UTF_8);
         pr.waitFor();
         if (releases.length == 1) {
-            parseLines(project, output, releases[0]);
+            parseLines(project, output, releases[0], false);
         } else if (releases.length == 2) {
-            parseLines(project, output, releases[1]);
+            parseLines(project, output, releases[1], false);
         }
+    }
+
+    public static void getReleaseCommits(Project project, Release first, Release second)
+            throws IOException, InterruptedException {
+        String projectName = project.getProjectName();
+        File file = new File(projectName);
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.directory(file);
+        pb.command(GIT, NP, "log", NUMSTAT, COMMIT_FORMAT,
+                MessageFormat.format(project.getReleaseString(), first.getName()) + ".." +
+                        MessageFormat.format(project.getReleaseString(), second.getName()));
+        Process pr = pb.start();
+        String output = IOUtils.toString(pr.getInputStream(), StandardCharsets.UTF_8);
+        pr.waitFor();
+        parseLines(project, output, second, true);
     }
 
     public static void getCommitRelatedMetrics(Project project, List<Release> releases)
@@ -239,6 +257,15 @@ public class GitHandler {
         getReleaseCommitRelatedMetrics(project, releases.get(0));
         for (int i = 1; i < releases.size(); i++) {
             getReleaseCommitRelatedMetrics(project, releases.get(i - 1), releases.get(i));
+        }
+    }
+
+    public static void getCommits(Project project, List<Release> releases, Release lastMain)
+            throws IOException, InterruptedException {
+        // Get commits for first release
+        getReleaseCommits(project, lastMain, releases.get(0));
+        for (int i = 1; i < releases.size(); i++) {
+            getReleaseCommits(project, releases.get(i - 1), releases.get(i));
         }
     }
 
