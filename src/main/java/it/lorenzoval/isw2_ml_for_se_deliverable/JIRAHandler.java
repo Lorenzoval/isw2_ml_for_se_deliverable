@@ -75,10 +75,11 @@ public class JIRAHandler {
                 if (jsonObject.has(rd)) {
                     if (jsonObject.has(n)) {
                         String releaseName = jsonObject.getString(n);
-                        LocalDate releaseDate = GitHandler.getReleaseDate(project, releaseName);
+                        LocalDate gitReleaseDate = GitHandler.getReleaseDate(project, releaseName);
                         // Only add if present in git as well
-                        if (releaseDate != null)
-                            releases.add(new Release(project, releaseName, releaseDate));
+                        if (gitReleaseDate != null)
+                            releases.add(new Release(project, releaseName, gitReleaseDate,
+                                    LocalDate.parse(jsonObject.getString(rd))));
                     } else {
                         logger.log(Level.SEVERE, "No name found for release {0}", jsonObject.getString(rd));
                     }
