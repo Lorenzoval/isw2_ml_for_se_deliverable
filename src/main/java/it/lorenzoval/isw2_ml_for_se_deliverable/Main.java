@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -41,16 +42,33 @@ public class Main {
         FileUtils.writeLines(outFile, lines);
     }
 
+    public static void getCreationDates(Project project, Release release, Map<String, Integer> files)
+            throws InterruptedException, ExecutionException {
+        try (ExecutorService executorService = Executors.newFixedThreadPool(16)) {
+            List<Future<Void>> futures = new ArrayList<>();
+            for (Map.Entry<String, Integer> entry : files.entrySet()) {
+                futures.add(executorService.submit(() -> {
+                    LocalDate creationDate = GitHandler.getFileCreationDate(project, entry.getKey());
+                    release.addFile(entry.getKey(), entry.getValue(), creationDate);
+                    return null;
+                }));
+            }
+            executorService.shutdown();
+            for (Future<Void> future : futures)
+                future.get();
+            if (!executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS))
+                // Should never happen
+                executorService.shutdownNow();
+        }
+    }
+
     public static void getFiles(Project project, List<Release> releases, boolean dropped) throws IOException,
-            InterruptedException {
+            InterruptedException, ExecutionException {
         for (Release release : releases) {
             GitHandler.changeRelease(project, release);
             Map<String, Integer> files = TokeiHandler.countLoc(project);
             if (!dropped) {
-                for (Map.Entry<String, Integer> entry : files.entrySet()) {
-                    LocalDate creationDate = GitHandler.getFileCreationDate(project, entry.getKey());
-                    release.addFile(entry.getKey(), entry.getValue(), creationDate);
-                }
+                getCreationDates(project, release, files);
             } else {
                 for (Map.Entry<String, Integer> entry : files.entrySet()) {
                     release.addFile(entry.getKey());
@@ -59,7 +77,8 @@ public class Main {
         }
     }
 
-    public static void getFiles(Project project, ReleasesList releasesList) throws IOException, InterruptedException {
+    public static void getFiles(Project project, ReleasesList releasesList) throws IOException, InterruptedException,
+            ExecutionException {
         getFiles(project, releasesList.getMain(), false);
         getFiles(project, releasesList.getDropped(), true);
     }
@@ -79,7 +98,8 @@ public class Main {
         }
     }
 
-    public static void buildDataset(Project project) throws IOException, InterruptedException, URISyntaxException {
+    public static void buildDataset(Project project) throws IOException, InterruptedException, URISyntaxException,
+            ExecutionException {
         ReleasesList releasesList = new ReleasesList(JIRAHandler.getReleases(project));
         logger.log(Level.INFO, "Gathering metrics for {0}", project.getProjectName());
         getFiles(project, releasesList);
@@ -92,7 +112,8 @@ public class Main {
         writeToCSV(project, releasesList.getMain());
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
+    public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException,
+            ExecutionException {
         Project syncope = new Syncope();
         Project bookkeeper = new Bookkeeper();
         logger.log(Level.INFO, "Updating projects");

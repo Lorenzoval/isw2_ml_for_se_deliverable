@@ -50,7 +50,7 @@ public class Release implements Comparable<Release> {
         this.id = id;
     }
 
-    public void addFile(String fileName, long loc, LocalDate creationDate) {
+    public synchronized void addFile(String fileName, long loc, LocalDate creationDate) {
         files.put(fileName, new Metrics(loc, creationDate, gitReleaseDate));
     }
 
