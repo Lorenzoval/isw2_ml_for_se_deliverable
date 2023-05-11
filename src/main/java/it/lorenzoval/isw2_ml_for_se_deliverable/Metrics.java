@@ -21,6 +21,7 @@ public class Metrics {
     private int chgSetSize;
     private int maxChgSetSize;
     private double avgChgSetSize;
+    private boolean buggy;
 
     public Metrics() {
         // Dummy constructor for dropped releases
@@ -45,6 +46,7 @@ public class Metrics {
         this.maxChgSetSize = 0;
         this.avgChgSetSize = 0;
         this.age = ChronoUnit.WEEKS.between(creationDate, releaseDate);
+        this.buggy = false;
     }
 
     public long getLoc() {
@@ -109,6 +111,14 @@ public class Metrics {
 
     public long getWeightedAge() {
         return this.age * this.locTouched;
+    }
+
+    public boolean isBuggy() {
+        return this.buggy;
+    }
+
+    public void setBuggy() {
+        this.buggy = true;
     }
 
     public void increaseFixes() {

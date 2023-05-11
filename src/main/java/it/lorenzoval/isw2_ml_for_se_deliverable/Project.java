@@ -5,12 +5,14 @@ public abstract class Project {
     private final String url;
     private final String projectName;
     private final String releaseString;
+    private final double movingWindow;
     private final RenamedFiles renamedFiles;
 
-    protected Project(String url, String projectName, String releaseString) {
+    protected Project(String url, String projectName, String releaseString, double movingWindow) {
         this.url = url;
         this.projectName = projectName;
         this.releaseString = releaseString;
+        this.movingWindow = movingWindow;
         this.renamedFiles = new RenamedFiles();
     }
 
@@ -24,6 +26,10 @@ public abstract class Project {
 
     public String getReleaseString() {
         return this.releaseString;
+    }
+
+    public double getMovingWindow() {
+        return this.movingWindow;
     }
 
     public RenamedFiles getRenamedFiles() {

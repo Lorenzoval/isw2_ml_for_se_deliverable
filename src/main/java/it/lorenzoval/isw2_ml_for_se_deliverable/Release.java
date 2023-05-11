@@ -93,6 +93,21 @@ public class Release implements Comparable<Release> {
         }
     }
 
+    public void setBuggy(String fileName) {
+        if (!files.containsKey(fileName)) {
+            RenamedFiles renamedFiles = this.project.getRenamedFiles();
+            if (renamedFiles.isRenamed(fileName)) {
+                for (String alias : renamedFiles.getNames(fileName)) {
+                    if (files.containsKey(alias)) {
+                        files.get(alias).setBuggy();
+                    }
+                }
+            }
+        } else {
+            files.get(fileName).setBuggy();
+        }
+    }
+
     @Override
     public int compareTo(Release release) {
         return this.gitReleaseDate.compareTo(release.getGitReleaseDate());
