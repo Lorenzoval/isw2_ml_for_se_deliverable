@@ -15,8 +15,8 @@ public class Main {
 
     private static final Logger logger = Logger.getLogger(Main.class.getName());
 
-    public static void writeToCSV(Project project, List<Release> releases) throws IOException {
-        File outFile = new File(project.getProjectName() + ".csv");
+    public static void writeDatasetToCSV(Project project, List<Release> releases) throws IOException {
+        File outFile = new File(project.getProjectName() + "_metrics.csv");
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
         lines.add("Version,File Name,LOC,LOC_touched,NR,NFix,NAuth,LOC_added,MAX_LOC_added,AVG_LOC_added,Churn," +
@@ -109,11 +109,10 @@ public class Main {
         logger.log(Level.INFO, "Gathering issues for {0}", project.getProjectName());
         List<Issue> bugs = JIRAHandler.getBugs(project, releasesList);
         setBuggyFiles(releasesList, bugs);
-        writeToCSV(project, releasesList.getMain());
+        writeDatasetToCSV(project, releasesList.getMain());
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException,
-            ExecutionException {
+    public static void main(String[] args) throws Exception {
         Project syncope = new Syncope();
         Project bookkeeper = new Bookkeeper();
         logger.log(Level.INFO, "Updating projects");
@@ -124,6 +123,9 @@ public class Main {
         syncope.getRenamedFiles().clear();
         buildDataset(bookkeeper);
         bookkeeper.getRenamedFiles().clear();
+        logger.log(Level.INFO, "Applying ML techniques");
+        WekaHandler.evaluateDataset(syncope);
+        WekaHandler.evaluateDataset(bookkeeper);
     }
 
 }
