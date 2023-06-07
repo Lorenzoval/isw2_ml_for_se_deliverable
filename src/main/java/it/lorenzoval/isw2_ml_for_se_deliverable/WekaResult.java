@@ -31,6 +31,10 @@ public class WekaResult {
         this.numTrainingReleases = numTrainingReleases;
     }
 
+    public String getDataset() {
+        return dataset;
+    }
+
     public void setPercentTrainingReleases(int percentTrainingReleases) {
         this.percentTrainingReleases = percentTrainingReleases;
     }

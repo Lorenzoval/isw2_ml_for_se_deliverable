@@ -76,17 +76,22 @@ public class JIRAHandler {
         }
     }
 
-    private static void parseVersionsArray(ReleasesList releasesList, List<Issue> bugs, Issue bug,
+    private static int parseVersionsArray(ReleasesList releasesList, List<Issue> bugs, Issue bug,
                                            List<Issue> proportionList, JSONArray jsonArray) {
         List<Release> affectedVersions = jsonArrayToList(releasesList, jsonArray);
         Collections.sort(affectedVersions);
         bug.addAffectedVersions(affectedVersions);
         // Exclude not post-release defect and defects with injected version after fixed version
-        if (!bug.getAffectedVersions().isEmpty() && !bug.getInjectedVersion().equals(bug.getFixedVersion())
-                && !bug.getInjectedVersion().getJiraReleaseDate().isAfter(bug.getFixedVersion().getJiraReleaseDate())) {
-            bugs.add(bug);
-            proportionList.add(bug);
+        if (!bug.getAffectedVersions().isEmpty() && !bug.getInjectedVersion().equals(bug.getFixedVersion())) {
+            if (!bug.getInjectedVersion().getJiraReleaseDate().isAfter(bug.getFixedVersion().getJiraReleaseDate())) {
+                bugs.add(bug);
+                proportionList.add(bug);
+                return 0;
+            } else {
+                return 2;
+            }
         }
+        return 1;
     }
 
     private static int getLastIssueId(Issue bug, List<Issue> proportionList, int startIndex) {
@@ -141,6 +146,9 @@ public class JIRAHandler {
         int i = 0;
         int j;
         int total;
+        int noCommit = 0;
+        int noPostRelease = 0;
+        int injectedAfterFixed = 0;
         String urlString;
         List<Issue> bugs = new ArrayList<>();
         List<Issue> proportionList = new ArrayList<>();
@@ -167,15 +175,22 @@ public class JIRAHandler {
                             .parse(jsonObject2.getString("resolutiondate"), fromAPIFormatter);
                     Issue bug = new Issue(key, openingVersion, resolutionDate);
                     Release fixedVersion = getAffectedFilesAndFixedVersion(releasesList, bug);
-                    if (fixedVersion == null)
+                    if (fixedVersion == null) {
                         // Do not add issues with no commit associated
+                        noCommit++;
                         continue;
-                    else
-                        bug.setFixedVersion(fixedVersion);
+                    }
+                    bug.setFixedVersion(fixedVersion);
                     if (jsonArray1.length() == 0) {
                         bugs.add(bug);
                     } else {
-                        parseVersionsArray(releasesList, bugs, bug, proportionList, jsonArray1);
+                        switch (parseVersionsArray(releasesList, bugs, bug, proportionList, jsonArray1)) {
+                            case 1 -> noPostRelease++;
+                            case 2 -> injectedAfterFixed++;
+                            default -> {
+                                // Used for case 0
+                            }
+                        }
                     }
                 }
             }
@@ -183,6 +198,12 @@ public class JIRAHandler {
         } while (i < total);
 
         proportion(releasesList, bugs, proportionList, project.getMovingWindow());
+
+        String logStr = Main.LOG_HEADER + project.getProjectName() + "\nTotal Issues: " + total +
+                "\nIssues not discarded: " + bugs.size() + "\nIssues considered for proportion: " +
+                proportionList.size() + "\nIssues not about java files or with no commit associated: " + noCommit +
+                "\nIssues not post release: " + noPostRelease + "\nIssues with IV > FV: " + injectedAfterFixed;
+        logger.log(Level.INFO, logStr);
 
         return bugs;
     }
@@ -194,13 +215,15 @@ public class JIRAHandler {
         urlString = MessageFormat.format(RELEASES_URL, project.getProjectName().toUpperCase(Locale.ROOT));
         final String rd = "releaseDate";
         final String n = "name";
+        int total;
         URI uri = new URI(urlString).parseServerAuthority();
 
         try (InputStream in = uri.toURL().openStream()) {
             JSONObject json = new JSONObject(IOUtils.toString(in, StandardCharsets.UTF_8));
             JSONArray versions = json.getJSONArray("versions");
+            total = versions.length();
 
-            for (int i = 0; i < versions.length(); i++) {
+            for (int i = 0; i < total; i++) {
                 JSONObject jsonObject = versions.getJSONObject(i);
                 if (jsonObject.has(rd)) {
                     if (jsonObject.has(n)) {
@@ -220,6 +243,10 @@ public class JIRAHandler {
                 }
             }
         }
+
+        String logStr = Main.LOG_HEADER + project.getProjectName() + "\nTotal Releases: " + total +
+                "\nReleases not discarded: " + releases.size();
+        logger.log(Level.INFO, logStr);
 
         return releases;
     }

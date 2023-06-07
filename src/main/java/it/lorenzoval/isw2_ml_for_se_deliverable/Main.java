@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 public class Main {
 
     private static final Logger logger = Logger.getLogger(Main.class.getName());
+    public static final String LOG_HEADER = "##INFO##\n";
 
     public static void writeDatasetToCSV(Project project, List<Release> releases) throws IOException {
         File outFile = new File(project.getProjectName() + "_metrics.csv");

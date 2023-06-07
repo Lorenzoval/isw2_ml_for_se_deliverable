@@ -17,9 +17,12 @@ import weka.filters.supervised.instance.SMOTE;
 import weka.filters.supervised.instance.SpreadSubsample;
 
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class WekaCallable implements Callable<WekaResult> {
 
+    private final Logger logger = Logger.getLogger(WekaCallable.class.getName());
     private final WekaResult wekaResult;
     private Instances trainingSet;
     private Instances testingSet;
@@ -107,6 +110,14 @@ public class WekaCallable implements Callable<WekaResult> {
                 attributeSelection.setInputFormat(this.trainingSet);
                 this.trainingSet = Filter.useFilter(this.trainingSet, attributeSelection);
                 this.testingSet = Filter.useFilter(this.testingSet, attributeSelection);
+                StringBuilder stringBuilder = new StringBuilder(Main.LOG_HEADER + wekaResult.getDataset() +
+                        "\nAttributes after Feature Selection: ");
+                for (int i = 0; i < this.trainingSet.numAttributes(); i++) {
+                    stringBuilder.append(this.testingSet.attribute(i).name());
+                    stringBuilder.append(" ");
+                }
+                String logStr = stringBuilder.toString();
+                logger.log(Level.INFO, logStr);
             }
             default -> {
                 // Mute Sonar

@@ -21,6 +21,8 @@ public class ReleasesList {
     public ReleasesList(List<Release> releases) {
         Collections.sort(releases);
         List<Release> temp = dropBackwardCompatibility(releases);
+        String logStr = Main.LOG_HEADER + "Releases after dropBackwardCompatibility: " + temp.size();
+        logger.log(Level.INFO, logStr);
         int i = 1;
         for (Release release : temp) {
             release.setId(i);
